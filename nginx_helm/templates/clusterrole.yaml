@@ -1,0 +1,50 @@
+{{- if .Values.clusterRole.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "common.clusterRoleName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.clusterRole.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.clusterRole.rules }}
+rules:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+---
+
+{{- if .Values.clusterRolebinding.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "common.clusterRolebindingName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.clusterRolebinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "common.clusterRoleName" . }}
+subjects:
+- kind: {{ .Values.clusterRolebinding.kind }}
+  {{- if eq .Values.clusterRolebinding.kind "ServiceAccount" }}
+  name: {{ .Values.clusterRolebinding.serviceAccountName }}
+  {{- else if eq .Values.clusterRolebinding.kind "User" }}
+  name: {{ .Values.clusterRolebinding.userName }}
+  {{- else if eq .Values.clusterRolebinding.kind "Group" }}
+  name: {{ .Values.clusterRolebinding.groupName }}
+  {{- end }}
+  {{- if eq .Values.clusterRolebinding.kind "ServiceAccount" }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+  {{- if or (eq .Values.clusterRolebinding.kind "User")  (eq .Values.clusterRolebinding.kind "Group") }}
+  apiGroup: rbac.authorization.k8s.io
+  {{- end }}
+{{- end }}

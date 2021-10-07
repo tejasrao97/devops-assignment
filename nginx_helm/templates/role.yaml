@@ -1,0 +1,52 @@
+{{- if .Values.role.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "common.roleName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.role.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.role.rules }}
+rules:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+---
+
+{{- if .Values.rolebinding.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "common.rolebindingName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.rolebinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "common.roleName" . }}
+subjects:
+- kind: {{ .Values.rolebinding.kind }}
+  {{- if eq .Values.rolebinding.kind "ServiceAccount" }}
+  name: {{ .Values.rolebinding.serviceAccountName }}
+  {{- else if eq .Values.rolebinding.kind "User" }}
+  name: {{ .Values.rolebinding.userName }}
+  {{- else if eq .Values.rolebinding.kind "Group" }}
+  name: {{ .Values.rolebinding.groupName }}
+  {{- end }}
+  {{- if eq .Values.rolebinding.kind "ServiceAccount" }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+  {{- if or (eq .Values.rolebinding.kind "User")  (eq .Values.rolebinding.kind "Group") }}
+  apiGroup: rbac.authorization.k8s.io
+  {{- end }}
+{{- end }}

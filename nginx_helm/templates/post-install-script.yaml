@@ -1,0 +1,21 @@
+{{- if .Values.postInstallConfigmap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.postInstallConfigmapName" . }}
+  {{- with .Values.postInstallConfigmap.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+{{- if .Values.postInstallConfigmap.setImmutable }}
+{{- if eq .Capabilities.KubeVersion.Major "v1.19" }}
+immutable: true
+{{- else }}
+ {{- fail "Immutable field can be set in a configmap starting from kubernetes version v1.19" }}
+{{- end }}
+{{- end }}
+data: 
+{{ (.Files.Glob "scripts/postInstall.sh").AsConfig | indent 2 }}
+{{- end }}

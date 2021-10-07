@@ -1,0 +1,12 @@
+aws_access_key=""
+aws_secret_key=""
+client="test-app"
+private_key="./ssh_key/test-app"
+pub_key="./ssh_key/test-app.pub"
+
+region="ca-central-1"
+cidr_block="10.0.0.0/16"
+image="ami-0aaa30b7d342eaa1c"
+server_ip=""
+client_tier_node_type="t3a.micro"
+data_tier_node_type="t3a.micro"

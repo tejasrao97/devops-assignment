@@ -1,0 +1,400 @@
+# Default values for <Enter the Tool Name here>.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+deployment:
+  # Annotations to add to deployment
+  annotations: {}
+  replicaCount: 1
+
+image:
+  registry: docker.io/
+  repository: library/
+  name: nginx
+  tag: latest
+  pullPolicy: IfNotPresent
+ # Overrides the image tag whose default is the chart appVersion.
+
+imagePullSecrets:
+- name: ""
+nameOverride: ""
+fullnameOverride: ""
+
+
+##########Init-Containers fields##############
+
+initcontainers:
+  enabled: false
+initcontainersfields:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo Hello Worldi && ns lookup sonar 5432']
+  - name: init-myservice2
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo Hello World']
+
+##########Container ENV Values derived from Configmaps and secrets#############
+
+
+#Include Pod fields as ENV Values using Downward API
+customPodEnv:
+  enabled: true
+
+customPodEnvFields:
+  - name: MY_POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+
+
+extraEnv:
+  enabled: true
+extraEnvFields:
+  - envName: VALUE1_ENABLED
+    envValue: "true"
+  - envName: VALUE2_ENABLED
+    envValue: "false"
+
+configmapEnvKey:
+  enabled: false
+configmapEnvKeyField:
+  - configMapName: configmap-name1
+    envKeyName: KEY1_NAME
+    envkey: KEY1
+  - configMapName: configmap-name2
+    envKeyName: KEY2_NAME
+    envkey: KEY2
+
+configmapEnvFrom:
+  enabled: false
+configmapEnvFromField:
+  - configMapName: test-env1
+  - configMapName: test-env2
+    
+secretEnvKey:
+  enabled: false
+secretEnvKeyField:
+  - secretName: secret-name1
+    envKeyName: KEY1_NAME
+    envkey: KEY1
+  - secretName: secret-name2
+    envKeyName: KEY2_NAME
+    envkey: KEY2
+
+secretEnvFrom:
+  enabled: false
+secretEnvFromField:
+  - secretName: test-secret-env1
+  - secretName: test-secret-env2
+
+############Pod Volumes and Volume Mounts Section##############
+
+customVolumeMounts:
+  enabled: false
+  volumeMountFields:
+    - name: myconfigmap
+      mountPath: /var/lib/test1
+      subPath: configmapfile
+    - name: mysecret
+      mountPath: /var/lib/test2
+      subPath: secretfile
+
+
+configmapMounts:  
+  enabled: false
+  configNames:
+    - name: myconfigmap #Must Match volumemounts name mentioned above in customVolumeMounts section
+      configMap: 
+        name: myconfigmapvol-1
+
+secretMounts: 
+  enabled: false
+  secretNames: 
+    - name: mysecret  #Must Match volumemounts name mentioned above in customVolumeMounts section
+      secret:
+        secretName: mysecretvol-1
+
+
+#############Generic Container Values############
+
+Ports:
+  - name: http
+    containerPort: 80
+    protocol: TCP
+  #- name: https
+    #containerPort: 443
+    #protocol: TCP
+
+containerSecurityContext:
+  enabled: false
+containerSecurityContextFields:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+#############Generic Pod Values###################
+
+command:
+  enabled: false
+  cmd : '["printenv"]'
+
+arguments:
+  enabled: false
+  args: '["HOSTNAME", "KUBERNETES_PORT"]'
+
+
+podSecurityContext:
+  enabled: false
+podSecurityContextFields:
+  fsGroup: 2000
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 100m
+    memory: 120Mi
+  requests:
+    cpu: 50m
+    memory: 60Mi
+
+Probes:
+  enable: false
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+###########Secret File Values###############
+secret:
+  create: false
+  # The name of the secret to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-secret
+  # Annotations to add to the secret
+  annotations: {} 
+  type: Opaque
+  # datatype:- this field can have only two values stringData or data
+  datatype: stringData
+  # if <datatype: data> then secret file contents must be base64 encode
+
+  secretFromValues:
+    enabled: true
+  secretContents:
+    username: admin
+    password: admin123
+    uname: test1
+    pwd: test123
+
+  secretFromFile:
+    enabled: false
+
+###########Configmap File Values###############
+
+configmap:
+  create: false
+  # The name of the configmap to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-configmap
+  setImmutable: false
+  # Annotations to add to the configmap
+  annotations: {}
+  configmapFromValues:
+    enabled: false
+  configmapContents:
+    test.name: hello-test
+    log_level: INFO
+    date: 10-12-2021
+
+  configmapFromFile:
+    enabled: false
+  
+
+#############RBAC Values###################
+
+#If enabled deployment will pick the serviceAccount name mentioned below that is already created in the cluster
+customServiceAccount:
+  enabled: false
+  name: test-custom-sa
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-sa
+
+#A role will is a namespace-scoped object i.e it can only access objects present inside a particular namespace
+role:
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-role
+  # Annotations to add to the role
+  annotations: {}
+
+  #Both Role and Rolebinding should be present in the same namespace
+  rules:
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["pods/attach"]
+    verbs: ["create","delete","get","list","patch","update","watch"]  
+
+rolebinding:
+  create: true
+  # Annotations to add to the rolebinding
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-rolebinding
+
+  #Values defined by this API group are "User", "Group", and "ServiceAccount" only.
+  
+  #kind: User
+  #userName: test-user
+
+  #kind: Group
+  #groupName: test-group
+ 
+  kind: ServiceAccount
+  serviceAccountName: test-sa
+
+
+#clusterRole is cluster-scoped object i.e it can access cluster-scoped resources (like nodes) and namespaced resources (like Pods), across all namespaces
+clusterRole:
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: cluster-test-role
+  # Annotations to add to the clusterrole
+  annotations: {}
+  rules:
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["pods/attach"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["create","get","list","patch","watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create","get","list","patch","watch","delete","update"]
+  - apiGroups: [""]
+    resources: ["namespaces", "pods", "services", "secrets", "configmaps" , "events"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["deployments"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["kubeflow.org"]
+    resources:  ["experiments"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"] 
+
+clusterRolebinding:
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: test-cluster-rolebinding
+  # Annotations to add to the clusterrolebinding
+  annotations: {}
+
+  #Values defined by this API group are "User", "Group", and "ServiceAccount" only.
+
+  #kind: User
+  #userName: test-user
+
+  #kind: Group
+  #groupName: test-group
+
+  kind: ServiceAccount
+  serviceAccountName: test-sa
+
+
+
+############PRE-INSTALL AND POST-INSTALL JOBS##############
+
+
+preInstallConfigmap:
+  create: false
+  name: test-pre-install-script
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+  setImmutable: false
+
+
+preInstallJob:
+  create: false
+  name: test-pre-install-job
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+    #"helm.sh/hook-weight": "-4"
+
+postInstallConfigmap:
+  create: false
+  name: test-post-install-script
+  annotations: 
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+  setImmutable: false
+
+postInstallJob:
+  create: false
+  name: test-post-install-job
+  annotations: 
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+    "helm.sh/hook-weight": "2"
+  
+  
+
+#####THE BELOW BLOCKS ARE FOR SERVICE.YAML FILES#####
+#Add the extra service ports from here or uncomment##
+
+service:
+  type: NodePort
+
+servicePorts:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+

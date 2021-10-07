@@ -1,0 +1,343 @@
+---
+# Source: nginx/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  name: test-sa
+---
+# Source: nginx/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-test-role
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods/exec
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/log
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/attach
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - watch
+  - apiGroups:
+    - batch
+    resources:
+    - jobs
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - watch
+    - delete
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    - pods
+    - services
+    - secrets
+    - configmaps
+    - events
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - extensions
+    resources:
+    - deployments
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps
+    resources:
+    - deployments
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - kubeflow.org
+    resources:
+    - experiments
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+---
+# Source: nginx/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test-cluster-rolebinding
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-test-role
+subjects:
+- kind: ServiceAccount
+  name: test-sa
+  namespace: sample
+---
+# Source: nginx/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test-role
+  namespace: sample
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods/exec
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/log
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/attach
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+---
+# Source: nginx/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test-rolebinding
+  namespace: sample
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: test-role
+subjects:
+- kind: ServiceAccount
+  name: test-sa
+  namespace: sample
+---
+# Source: nginx/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-nginx-http
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: serviceport-one
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: serviceport-two
+      port: 8081
+      protocol: TCP
+      targetPort: 8082
+  selector:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: nginx/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-nginx
+  labels:
+    app: RELEASE-NAME-nginx
+    name: RELEASE-NAME-nginx
+    app.kubernetes.io/name: nginx
+    app.kubernetes.io/instance: RELEASE-NAME
+    helm.sh/chart: nginx-0.1.0
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx
+      app.kubernetes.io/instance: RELEASE-NAME
+      app: RELEASE-NAME-nginx
+      name: RELEASE-NAME-nginx
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-nginx
+        name: RELEASE-NAME-nginx
+        app.kubernetes.io/name: nginx
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      imagePullSecrets:
+        - name: ""
+      serviceAccountName: test-sa
+      containers:
+        - name: nginx
+          image: "nginx:latest"
+          imagePullPolicy: IfNotPresent  
+          ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: VALUE1_ENABLED
+              value: "true"
+            - name: VALUE2_ENABLED
+              value: "false"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_CPU_REQUEST
+              valueFrom:
+                resourceFieldRef:
+                  containerName: test-container
+                  resource: requests.cpu
+            - name: MY_CPU_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: test-container
+                  resource: limits.cpu
+          envFrom:
+          volumeMounts:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 120Mi
+            requests:
+              cpu: 50m
+              memory: 60Mi
+      volumes:

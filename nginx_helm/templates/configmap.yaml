@@ -1,0 +1,32 @@
+{{- if .Values.configmap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.configmapName" . }}
+  {{- with .Values.configmap.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+{{- if .Values.configmap.setImmutable }}
+{{- if eq .Capabilities.KubeVersion.Major "v1.19" }}
+immutable: true
+{{- else }}
+ {{- fail "Immutable field can be set in a configmap starting from kubernetes version v1.19" }}
+{{- end }}
+{{- end }}
+data: 
+{{- if .Values.configmap.configmapFromValues.enabled }}
+  {{- with .Values.configmap.configmapContents }}
+    {{- range $key, $value := . }}
+    {{- printf "%s: %s" $key (tpl $value $ | quote) | nindent 2 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- if .Values.configmap.configmapFromFile.enabled }}
+{{ (.Files.Glob "config/*").AsConfig | indent 2 }}
+{{- end }}
+
+{{- end }}

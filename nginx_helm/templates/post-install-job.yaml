@@ -1,0 +1,37 @@
+{{- if .Values.postInstallJob.create }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.postInstallJobName" . }}
+  {{- with .Values.postInstallJob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: {{ include "common.postInstallJobName" . }}
+      {{- with .Values.postInstallJob.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "common.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: {{ .Chart.Name }}-post-install
+        image: "bash"
+        command: ["bash", "/scripts/postInstall.sh"]
+        volumeMounts:
+          - name: post-install-setup
+            mountPath: /scripts/postInstall.sh
+            subPath: postInstall.sh
+      volumes:
+        - name: post-install-setup
+          configMap:
+            name: {{ .Values.postInstallConfigmap.name }}
+            defaultMode: 0777
+{{- end }}

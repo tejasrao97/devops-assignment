@@ -1,0 +1,38 @@
+{{- if .Values.preInstallJob.create }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.preInstallJobName" . }}
+  {{- with .Values.preInstallJob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: {{ include "common.preInstallJobName" . }}
+      {{- with .Values.preInstallJob.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "common.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: {{ .Chart.Name }}-pre-install
+        image: "bash"
+        command: ["bash", "/scripts/preInstall.sh"]
+#        args: ["/scripts/preInstall.sh"]
+        volumeMounts:
+          - name: pre-install-setup
+            mountPath: /scripts/preInstall.sh
+            subPath: preInstall.sh
+      volumes:
+        - name: pre-install-setup
+          configMap:
+            name: {{ .Values.preInstallConfigmap.name }}
+            defaultMode: 0777
+{{- end }}
